@@ -71,7 +71,24 @@ def update_report(new_report: dict[str, Any]) -> None:
     current = _load(REPORT, {"updated_at": None, "products": [], "notes": []})
     existing = {product_key(p): p for p in current.get("products", [])}
     for product in products:
-        existing[product_key(product)] = product
+        key = product_key(product)
+        previous = existing.get(key)
+        if previous:
+            merged_product = dict(previous)
+            merged_product.update(product)
+            # A later creator-profile record must not erase an earlier
+            # featured-section finding just because the product name/price
+            # key is the same.
+            if previous.get("featured_section") and not product.get(
+                "featured_section"
+            ):
+                merged_product["featured_section"] = previous["featured_section"]
+                merged_product["featured_count"] = previous.get("featured_count")
+            if previous.get("videos") and not product.get("videos"):
+                merged_product["videos"] = previous["videos"]
+            existing[key] = merged_product
+        else:
+            existing[key] = product
     merged = dict(current)
     merged.update({k: v for k, v in new_report.items() if k != "products"})
     merged["updated_at"] = datetime.now(timezone.utc).isoformat()
