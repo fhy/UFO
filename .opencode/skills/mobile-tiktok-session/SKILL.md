@@ -167,9 +167,9 @@ For each product:
 5. Read the current detail screenshot before scrolling.
 6. Wait several seconds after entering the detail page, then swipe upward once to scroll down. Inspect the full screenshot after the swipe.
 7. If `达人视频精选` is visible but its first thumbnail is only partly exposed or is obscured by the fixed purchase bar, treat this as a known intermediate state: the section exists, but the video is not safely clickable. Swipe upward once more and inspect again. Do not click the purchase bar. A visible heading alone is not sufficient evidence for clicking the first video.
-8. When the heading is detected, estimate its vertical position and prefer a controlled swipe that places it in the upper-middle of the 720x1600 screen (approximately y=450-750), with the first thumbnail above the fixed purchase bar.
+8. When the heading is detected, stop immediately and capture the heading, count, product name, price, and first-thumbnail position from that same frame. Do not perform another swipe if the heading and first thumbnail are fully visible. Only swipe once more when the thumbnail is demonstrably covered by the fixed purchase bar or is only partially exposed.
 9. The section may appear only after the third upward swipe. Inspect after swipes 1, 2, and 3 before recording it as absent, unless the page reaches its bottom or stops changing.
-10. Stop immediately when the heading and first thumbnail are fully visible. Successful runs found `达人视频精选 (13)` after one upward swipe, `达人视频精选 (30+)` after the section was fully exposed, and `达人视频精选 (2)` after two swipes.
+10. Stop immediately when the heading and first thumbnail are fully visible. A later screenshot showing `客户评论` means the prior frame was already the correct target frame and the extra swipe went too far; do not classify the product as absent from that later frame. Successful runs found `达人视频精选 (13)` after one upward swipe, `达人视频精选 (30+)` after the section was fully exposed, and `达人视频精选 (2)` after two swipes.
 11. If the page reaches the bottom, does not change, or reaches six detail scrolls without the target, record `has_creator_video=false` and return once to the product list.
 12. Never switch detail tabs or click unrelated recommended products while searching.
 
