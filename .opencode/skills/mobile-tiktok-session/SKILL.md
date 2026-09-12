@@ -86,7 +86,7 @@ After tapping the shop icon, verify the destination before selecting a product:
 - The real device image is `720x1600`; never apply coordinates inferred for `1080x2400`. Prefer live controls and use scaled visual coordinates only once as fallback.
 - Product cards contain image, title, price, cart, buy, and management regions. Use the title/price text region; treat `购买`, `立即购买`, `加入购物车`, and cart controls as unsafe.
 - If an accidental click opens an image viewer, close it once with fresh `关闭` and recollect. If it opens an add-to-cart page/drawer, do not confirm or checkout; close and choose a different text point.
-- After the first detail-page upward swipe, if `达人视频精选` or thumbnails are partly hidden behind the purchase bar, swipe upward once more. Do not click the purchase bar. Verified counts include `(13)`, `(30+)`, `(2)`, and `(1)`.
+- After the first detail-page upward swipe, if `达人视频精选` is visible but the first thumbnail is partly hidden behind the purchase bar, swipe upward once more. Do not click the purchase bar. Verified counts include `(13)`, `(30+)`, `(2)`, and `(1)`.
 - A successful tap only means ADB injected input. Verify Activity and screenshot after 2-5 seconds.
 - When the featured section is fully visible, stop scrolling, click the first featured video, then use the creator control whose accessibility description ends with `主页`, not `关注` or engagement controls.
 - If the page remains wrong after two recovery attempts, stop and report `unknown`; do not continue old coordinates.
@@ -147,10 +147,32 @@ For each product:
 4. If an image viewer opens, close it once and verify the detail page.
 5. Read the current detail screenshot before scrolling.
 6. Wait several seconds after entering the detail page, then swipe upward once to scroll down. Inspect the full screenshot after the swipe.
-7. If `达人视频精选` is only partially visible or is obscured by the fixed purchase bar, treat this as a known intermediate state: the section is not yet safely readable. Swipe upward once more and inspect again. Do not click the purchase bar. A section header or thumbnail partly hidden behind `购买`/`立即购买` is not sufficient evidence for extracting the count or clicking the first video.
-8. Stop immediately when the heading and first thumbnail are fully visible. Successful runs found `达人视频精选 (13)` after one upward swipe, `达人视频精选 (30+)` after the section was fully exposed, and `达人视频精选 (2)` after two swipes.
-9. If the page reaches the bottom, does not change, or reaches six detail scrolls without the target, record `has_creator_video=false` and return once to the product list.
-10. Never switch detail tabs or click unrelated recommended products while searching.
+7. If `达人视频精选` is visible but its first thumbnail is only partly exposed or is obscured by the fixed purchase bar, treat this as a known intermediate state: the section exists, but the video is not safely clickable. Swipe upward once more and inspect again. Do not click the purchase bar. A visible heading alone is not sufficient evidence for clicking the first video.
+8. When the heading is detected, estimate its vertical position and prefer a controlled swipe that places it in the upper-middle of the 720x1600 screen (approximately y=450-750), with the first thumbnail above the fixed purchase bar.
+9. The section may appear only after the third upward swipe. Inspect after swipes 1, 2, and 3 before recording it as absent, unless the page reaches its bottom or stops changing.
+10. Stop immediately when the heading and first thumbnail are fully visible. Successful runs found `达人视频精选 (13)` after one upward swipe, `达人视频精选 (30+)` after the section was fully exposed, and `达人视频精选 (2)` after two swipes.
+11. If the page reaches the bottom, does not change, or reaches six detail scrolls without the target, record `has_creator_video=false` and return once to the product list.
+12. Never switch detail tabs or click unrelated recommended products while searching.
+
+Important page-order rule: on the relevant product detail layout,
+`达人视频精选` appears above `客户评论` or `客户对店铺的评价`. If either
+review section becomes visible before the target is found, stop searching this
+product immediately. Do not scroll below reviews or click review cards/videos.
+Only record the product as absent when the target was not visible above the
+review boundary. A generic `视频` section below reviews is not evidence of
+`达人视频精选`.
+
+For product traversal, treat the review boundary as the per-product stop
+condition: no target above reviews means record `has_creator_video=false`,
+return to the Shop product list, and select the next unprocessed product. Do
+not continue searching the current product below `客户评论`.
+
+When `达人视频精选` is found once, stop inspecting that product immediately
+after recording the section and its count. Return to the Shop product list,
+recollect the list and controls, and restart product selection from the
+beginning of the list if the task requests a fresh traversal. Do not keep
+scrolling the same detail page or process additional sections before returning
+to the list.
 
 Maintain a ledger:
 
@@ -180,7 +202,7 @@ When `达人视频精选` is found:
 
 1. Stop scrolling.
 2. Record the product name, price, and section count.
-3. Click only the first video card inside that section.
+3. After a fresh screenshot, click a point just below the `达人视频精选` heading, inside the first thumbnail image. Do not click far below the heading; that area may be `评论`/reviews and opens comments instead of the featured video.
 4. Do not click the product purchase area or other videos.
 5. On the video page, identify the creator using a clearly labeled avatar, handle, or account name.
 6. Click only that creator entry.
@@ -189,6 +211,8 @@ When `达人视频精选` is found:
 9. Finish immediately after the public creator information is captured.
 
 If no explicit creator avatar or handle is visible, report that creator profile navigation is unavailable. Do not infer a creator name from product text, watermark text, or the shop name.
+
+If a click opens `评论`, reviews, or a comment panel, it is a misclick: press BACK once, recapture the screenshot, locate the heading again, and click immediately below it. Never repeat the previous low coordinate.
 
 ## Process Evidence and Report
 
@@ -279,7 +303,7 @@ The latest verified complete flow was profile -> shop icon after `你的订单` 
 
 ## Product Image Fallback
 
-The preferred product-detail target is the title/price or right-side text region. If no reliable text control is exposed, the left product image may be tried once after confirming the screen is a product list and the image is not an action button. The image may open an image viewer instead of the detail page: click the fresh `关闭` once, recollect controls, and use the title/price region if the page returns to the list. If an add-to-cart confirmation or cart drawer appears, close it without confirming or checking out, recollect the list, and never repeat the same image coordinate. If the purchase bar covers the featured heading or thumbnails, swipe upward again; never click `购买`, `立即购买`, or `加入购物车` to expose the section.
+The preferred product-detail target is the title/price or right-side text region. If no reliable text control is exposed, the left product image may be tried once after confirming the screen is a product list and the image is not an action button. The image may open an image viewer instead of the detail page: click the fresh `关闭` once, recollect controls, and use the title/price region if the page returns to the list. If an add-to-cart confirmation or cart drawer appears, close it without confirming or checking out, recollect the list, and never repeat the same image coordinate. If the purchase bar covers the featured heading or thumbnails, swipe upward again; never click `购买`, `立即购买`, or `加入购物车` to expose the section. When the heading is visible but the first thumbnail is still covered, one more upward swipe is mandatory before clicking.
 
 ## Stop Conditions
 
