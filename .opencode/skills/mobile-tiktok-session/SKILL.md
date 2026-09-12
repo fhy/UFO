@@ -298,7 +298,33 @@ Stop and report the state when:
 - the current video index cannot be reconciled with the saved ledger;
 - a return from video or creator profile does not restore the same product's featured section.
 
+## Error Page Recovery
+
+If an error page is detected, record the Activity, visible markers, last
+action, screenshot path, and recovery action before doing anything else.
+Known error states include `分享主页`, `发现好友`, QR scanner, bio editor,
+seller toolkit, add-to-cart/cart, purchase/checkout, image viewer, login,
+permission, advertisement, promotion, video/sound pages, lock screen, and
+launcher when a Shop page is expected.
+
+Recovery is deliberately limited: stop Agent actions, try one fresh `关闭`,
+`取消`, or `KEYCODE_BACK` only when the destination is clear, then recollect
+Activity, screenshot, and controls. If the same wrong page remains, terminate
+the task and return `failed`/`unknown` with the recorded event. If no useful
+detail state must be preserved, force-stop and relaunch TikTok before the next
+task. Never allow an old task to continue after recovery or wait for the full
+timeout when the same error page/action repeats twice.
+
 Return `unknown` rather than claiming a product lacks `达人视频精选` when the page could not be inspected reliably.
+
+## Interaction Timeout
+
+Use a 60-second watchdog for each expected transition or recovery step. If the
+expected page marker has not appeared within 60 seconds, stop issuing actions,
+record Activity, screenshot, controls, last action, and elapsed time, then
+attempt at most one clear recovery action. If the expected state is still
+absent, terminate as `failed`/`unknown` instead of waiting for the global
+900-second task timeout. A new attempt must use a new task name.
 
 ## Historical Successful Evidence
 
