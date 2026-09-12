@@ -2,10 +2,10 @@
 
 # LLM Parameters
 MAX_TOKENS: 2000  # The max token limit for the response completion
-MAX_RETRY: 20  # The max retry limit for the response completion
+MAX_RETRY: 2  # The max retry limit for the response completion
 TEMPERATURE: 0.0  # The temperature of the model: the lower the value, the more consistent
 TOP_P: 0.0  # The top_p of the model: the lower the value, the more conservative
-TIMEOUT: 60  # The call timeout(s), default is 1 mins
+TIMEOUT: 180  # The call timeout(s), allowing multimodal local inference
 
 # Control Backend
 CONTROL_BACKEND: ["uia"]  # The backend for control action: uia, omniparser
@@ -15,6 +15,7 @@ IOU_THRESHOLD_FOR_MERGE: 0.1  # The iou threshold for merging the boxes between 
 MAX_STEP: 50  # The max step limit for completing the user request
 MAX_ROUND: 1  # The max round limit for completing the user request
 TASK_TIMEOUT: 900  # Hard timeout in seconds for a background task
+INTERACTION_TIMEOUT: 60  # Per-transition watchdog for mobile page changes
 SLEEP_TIME: 1  # The sleep time between each step to wait for the window to be ready
 RECTANGLE_TIME: 1
 

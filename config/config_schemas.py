@@ -260,10 +260,10 @@ class SystemConfig:
 
     # ========== LLM Parameters ==========
     max_tokens: int = 2000
-    max_retry: int = 20
+    max_retry: int = 2
     temperature: float = 0.0
     top_p: float = 0.0
-    timeout: int = 60
+    timeout: int = 180
 
     # ========== Control Backend ==========
     control_backend: List[str] = field(default_factory=lambda: ["uia"])
@@ -273,6 +273,7 @@ class SystemConfig:
     max_step: int = 50
     max_round: int = 1
     task_timeout: int = 900
+    interaction_timeout: int = 60
     sleep_time: int = 1
     rectangle_time: int = 1
 
@@ -486,6 +487,7 @@ class SystemConfig:
             "MAX_STEP": "max_step",
             "MAX_ROUND": "max_round",
             "TASK_TIMEOUT": "task_timeout",
+            "INTERACTION_TIMEOUT": "interaction_timeout",
             "SLEEP_TIME": "sleep_time",
             "RECTANGLE_TIME": "rectangle_time",
             # Action Configuration
