@@ -66,6 +66,11 @@ class SessionManager:
 
         # Mapping of task names to session IDs
         self.session_id_dict: Dict[str, str] = {}
+        # Task-name keyed state is the source of truth for the HTTP polling
+        # API. Session objects are removed after callbacks, so deriving task
+        # state from ``sessions`` can otherwise produce false empty results.
+        self._task_results: Dict[str, Optional[Dict[str, Any]]] = {}
+        self._task_status: Dict[str, str] = {}
         # Mapping of session_id -> the ``client_id`` that first created
         # the session. This is the authoritative owner used to defeat
         # cross-client session reuse (see :class:`SessionOwnershipError`).
@@ -191,6 +196,8 @@ class SessionManager:
                     )
 
                 self.session_id_dict[task_name] = session_id
+                self._task_results[task_name] = None
+                self._task_status[task_name] = "running"
                 self.sessions[session_id] = session
                 # Bind the session to its creator for the lifetime of
                 # the in-memory entry. Subsequent reuse with a different
@@ -275,8 +282,13 @@ class SessionManager:
         """
         with self.lock:
             if session_id in self.sessions:
-                return self.sessions[session_id].results
-            return None
+                session = self.sessions[session_id]
+                # A live session starts with an empty result list. Do not
+                # expose that initial value as a completed API result.
+                if not session.is_finished() and not session.is_error():
+                    return None
+                return session.results
+            return self.results.get(session_id)
 
     def get_result_by_task(self, task_name: str) -> Optional[Dict[str, any]]:
         """
@@ -285,9 +297,26 @@ class SessionManager:
         :return: A dictionary containing the session result, or None if not found.
         """
         with self.lock:
+            if task_name in self._task_status:
+                if self._task_status[task_name] == "running":
+                    return None
+                return self._task_results.get(task_name)
             session_id = self.session_id_dict.get(task_name)
-            if session_id:
-                return self.get_result(session_id)
+            # A live session may report ``is_finished`` transiently while
+            # its round is being advanced. The background-task registry is
+            # the authoritative indication that the API result is not ready.
+            running_task = (
+                self._running_tasks.get(session_id) if session_id else None
+            )
+            if running_task is not None and not running_task.done():
+                return None
+        if session_id:
+            return self.get_result(session_id)
+
+    def get_task_status(self, task_name: str) -> Optional[str]:
+        """Return the lifecycle state tracked for an HTTP-polled task."""
+        with self.lock:
+            return self._task_status.get(task_name)
 
     def set_results(self, session_id: str):
         """
@@ -296,7 +325,11 @@ class SessionManager:
         """
         with self.lock:
             if session_id in self.sessions:
-                self.results[session_id] = self.sessions[session_id].results
+                result = self.sessions[session_id].results
+                self.results[session_id] = result
+                task_name = self.sessions[session_id].task
+                self._task_results[task_name] = result
+                self._task_status[task_name] = "done"
 
     def remove_session(self, session_id: str):
         """
@@ -448,8 +481,11 @@ class SessionManager:
             self.logger.info(f"[SessionManager] 🚀 Executing session {session_id}")
             start_time = asyncio.get_event_loop().time()
 
-            # Run the session (this may contain sync LLM calls that need fixing)
-            await session.run()
+            # Bound the complete session so a non-converging agent cannot
+            # leave the API reporting ``pending`` indefinitely.
+            await asyncio.wait_for(
+                session.run(), timeout=ufo_config.system.task_timeout
+            )
 
             elapsed = asyncio.get_event_loop().time() - start_time
             self.logger.info(
@@ -466,10 +502,28 @@ class SessionManager:
                     f"[SessionManager] ⚠️ Session {session_id} ended with error"
                 )
             elif session.is_finished():
-                status = TaskStatus.COMPLETED
-                self.logger.info(
-                    f"[SessionManager] ✅ Session {session_id} finished successfully"
+                # Reaching MAX_STEP is a safety cutoff, not successful task
+                # completion.  A session can also finish normally because it
+                # reached MAX_ROUND, so only treat the step cutoff as a
+                # failure when the agent never set its explicit finish flag.
+                hit_step_limit = (
+                    session.step >= ufo_config.system.max_step
+                    and not getattr(session, "_finish", False)
                 )
+                if hit_step_limit:
+                    status = TaskStatus.FAILED
+                    error = (
+                        f"Task did not finish within the maximum of "
+                        f"{ufo_config.system.max_step} steps"
+                    )
+                    self.logger.warning(
+                        f"[SessionManager] ⚠️ Session {session_id} hit the step limit"
+                    )
+                else:
+                    status = TaskStatus.COMPLETED
+                    self.logger.info(
+                        f"[SessionManager] ✅ Session {session_id} finished successfully"
+                    )
             else:
                 status = TaskStatus.FAILED
                 error = "Session ended in unknown state"
@@ -478,6 +532,20 @@ class SessionManager:
                 )
 
             session.reset()
+
+        except asyncio.TimeoutError:
+            status = TaskStatus.FAILED
+            error = (
+                f"Task exceeded the maximum runtime of "
+                f"{ufo_config.system.task_timeout} seconds"
+            )
+            self.logger.warning(
+                f"[SessionManager] ⚠️ Session {session_id} timed out"
+            )
+            with self.lock:
+                if session_id in self.sessions:
+                    task_name = self.sessions[session_id].task
+                    self._task_status[task_name] = "failed"
 
         except asyncio.CancelledError:
             # Handle task cancellation
@@ -534,6 +602,11 @@ class SessionManager:
 
             # Save results
             self.set_results(session_id)
+            with self.lock:
+                task_name = session.task
+                self._task_status[task_name] = (
+                    "done" if status == TaskStatus.COMPLETED else "failed"
+                )
             self.logger.info(
                 f"[SessionManager] 💾 Saved results for session {session_id}"
             )

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TikTok Shop 达人视频报表</title>
+  <style>
+    :root { color-scheme: dark; --bg:#101315; --panel:#191e20; --muted:#9aa7a9; --line:#2b3537; --accent:#72e0c0; --warn:#f5c16c; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 10% 0,#1d3938 0,transparent 35%),var(--bg); color:#edf5f2; font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { max-width:1180px; margin:auto; padding:42px 22px 64px; }
+    header { display:flex; justify-content:space-between; gap:20px; align-items:end; border-bottom:1px solid var(--line); padding-bottom:24px; }
+    h1 { margin:0; font-size:clamp(26px,4vw,46px); letter-spacing:-.04em; }
+    .eyebrow { color:var(--accent); text-transform:uppercase; letter-spacing:.14em; font-size:12px; font-weight:700; }
+    .updated { color:var(--muted); white-space:nowrap; }
+    .summary { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:24px 0; }
+    .stat,.card { background:rgba(25,30,32,.9); border:1px solid var(--line); border-radius:14px; }
+    .stat { padding:18px; } .stat b { display:block; font-size:28px; color:var(--accent); } .stat span { color:var(--muted); }
+    .card { padding:20px; margin-top:16px; overflow:auto; }
+    .product-head { display:flex; justify-content:space-between; gap:16px; align-items:start; }
+    h2 { margin:0 0 4px; font-size:21px; } h3 { margin:22px 0 8px; color:var(--accent); font-size:15px; }
+    .price { color:var(--warn); font-weight:700; font-size:18px; } .meta,.empty { color:var(--muted); }
+    table { width:100%; border-collapse:collapse; min-width:760px; } th,td { text-align:left; padding:10px 9px; border-bottom:1px solid var(--line); vertical-align:top; } th { color:var(--muted); font-size:12px; text-transform:uppercase; }
+    .tag { display:inline-block; border:1px solid #39796c; color:var(--accent); border-radius:999px; padding:2px 9px; font-size:12px; }
+    footer { color:var(--muted); margin-top:26px; font-size:13px; }
+    @media (max-width:700px) { main{padding:28px 14px 44px} header{display:block} .updated{margin-top:8px} .summary{grid-template-columns:repeat(2,1fr)} .stat b{font-size:23px} }
+  </style>
+</head>
+<body>
+<main>
+  <header><div><div class="eyebrow">UFO / MobileAgent</div><h1>TikTok Shop 达人视频报表</h1></div><div class="updated" id="updated">加载中...</div></header>
+  <section class="summary" id="summary"></section>
+  <section id="products"></section>
+  <footer>数据来自 UFO MobileAgent 采集缓存。未显示的商品、视频或达人 ID 以 null 表示，不使用控件 ID 或坐标代替业务 ID。</footer>
+</main>
+<script>
+  fetch('report.json?v='+Date.now()).then(r=>r.json()).then(data=>{
+  const products=data.products||[], videos=products.flatMap(p=>p.videos||[]), creators=videos.map(v=>v.creator?.handle||v.creator?.id||v.creator?.nickname).filter(Boolean);
+  document.querySelector('#updated').textContent='更新于 '+new Date(data.updated_at).toLocaleString('zh-CN');
+  document.querySelector('#summary').innerHTML=[['商品',products.length],['达人精选商品',products.filter(p=>p.featured_section).length],['精选视频记录',videos.length],['唯一达人',new Set(creators).size]].map(x=>`<div class="stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+    document.querySelector('#products').innerHTML=products.map((p,i)=>`<article class="card"><div class="product-head"><div><h2>${p.name||'未显示'}</h2><div class="meta">商品 ID：${p.id??'null'} · 状态：${p.status||'checked'} · 检查视频：${p.checked_video_count??0} · 唯一达人：${p.unique_creator_count??0}</div></div><div class="price">${p.price||'未显示'}</div></div><h3>达人视频精选 ${p.featured_count?`<span class="tag">${p.featured_count}</span>`:'<span class="tag">没有</span>'}</h3>${(p.videos||[]).length?`<table><thead><tr><th>视频</th><th>视频 ID</th><th>视频名称</th><th>达人昵称</th><th>账号</th><th>关注</th><th>粉丝</th><th>获赞</th><th>简介</th></tr></thead><tbody>${p.videos.map(v=>`<tr><td>#${v.index}</td><td>${v.id??'null'}</td><td>${v.name??'null'}</td><td>${v.creator?.nickname??'null'}</td><td>${v.creator?.handle??'null'}</td><td>${v.creator?.following??'null'}</td><td>${v.creator?.followers??'null'}</td><td>${v.creator?.likes??'null'}</td><td>${v.creator?.bio??'null'}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">暂无已记录的达人视频资料；若状态为 checked-no-featured-section，表示已检查且没有达人视频精选。</div>'}</article>`).join('');
+}).catch(()=>document.querySelector('#products').innerHTML='<div class="card">报表加载失败，请检查 report.json。</div>');
+</script>
+</body></html>

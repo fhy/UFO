@@ -71,3 +71,6 @@ ufo/config/config_llm.yaml
 !config/*/device.yaml
 !config/*/network.yaml
 node_modules
+# Local TikTok report cache and rollback backups are runtime data, not source.
+.cache/tiktok_report_cache.json
+.cache/tiktok_report_backups/

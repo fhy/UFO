@@ -1,0 +1,107 @@
+{
+  "updated_at": "2026-09-12T00:00:00Z",
+  "products": [
+    {
+      "name": "ไข่ไก่ฟาร์มเกษตรพรีเมียม",
+      "id": null,
+      "price": "฿204.00",
+      "featured_section": "达人视频精选",
+      "featured_count": "30+",
+      "videos": [
+        {
+          "index": 1,
+          "id": null,
+          "name": null,
+          "creator": {
+            "nickname": "แม่คริม มาขายของ👶🏻",
+            "handle": "@mom.cuper",
+            "id": null,
+            "following": "70",
+            "followers": "3.2 万",
+            "likes": "78.7 万",
+            "bio": "ติดต่องาน🍏: bunthida331 ช่องหลัก @ลูกชายของแม่คริม👶🏻"
+          },
+          "status": "checked"
+        }
+      ]
+    },
+    {
+      "name": "แผ่นสักหลาด (Tree) + 14 ชิ้น",
+      "id": null,
+      "price": "฿84.00",
+      "featured_section": "达人视频精选",
+      "featured_count": "2",
+      "videos": [
+        {
+          "index": 1,
+          "id": null,
+          "name": null,
+          "creator": {
+            "nickname": "ดารินเด็กหน้ามึม✨",
+            "handle": "@darin_0212",
+            "id": null,
+            "following": "241",
+            "followers": "3.9 万",
+            "likes": "52.7 万",
+            "bio": "🛒 พักดของใช้แม่และเด็ก/ของใช้ในบ้าน 🧺 ห้ามุดคลิป lemon8-app.com/ดารินเด็กหน้ามึม✨"
+          },
+          "status": "checked"
+        }
+      ]
+    },
+    {
+      "name": "ตุ๊กตา ai พูดได้",
+      "id": null,
+      "price": "฿419.24",
+      "featured_section": "达人视频精选",
+      "featured_count": "13",
+      "videos": [],
+      "checked_video_count": 0,
+      "unique_creator_count": 0,
+      "status": "section-found-creator-not-captured"
+    },
+    {
+      "name": "ตุ๊กตา ai พูดได้",
+      "id": null,
+      "price": "฿419.24",
+      "featured_section": null,
+      "featured_count": null,
+      "videos": [
+        {
+          "index": 1,
+          "id": null,
+          "name": null,
+          "creator": {
+            "nickname": "มามี้หวาน",
+            "handle": "@mameehappy",
+            "id": null,
+            "following": "652",
+            "followers": "6957",
+            "likes": "19.7 万",
+            "bio": "ดูคลิป ปรับ 50,000 รับงานรีวิว; Lemon8 链接"
+          },
+          "status": "checked"
+        }
+      ],
+      "checked_video_count": 1,
+      "unique_creator_count": 1,
+      "status": "creator-profile-captured"
+    },
+    {
+      "name": "coriander che ...",
+      "id": null,
+      "price": "฿74.00",
+      "featured_section": null,
+      "featured_count": null,
+      "videos": [],
+      "checked_video_count": 0,
+      "unique_creator_count": 0,
+      "status": "checked-no-featured-section"
+    }
+  ],
+  "notes": [
+    "ID 使用 null 表示页面未显示可验证的业务 ID。",
+    "历史流程已验证：详情页等待后向上滑动 1-2 次，再检查达人视频精选。",
+    "商品详情页底部购买栏遮挡目标区域时，继续上滑，不点击购买或加入购物车。"
+  ]
+}

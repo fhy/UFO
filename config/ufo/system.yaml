@@ -14,6 +14,7 @@ IOU_THRESHOLD_FOR_MERGE: 0.1  # The iou threshold for merging the boxes between 
 # Execution Limits
 MAX_STEP: 50  # The max step limit for completing the user request
 MAX_ROUND: 1  # The max round limit for completing the user request
+TASK_TIMEOUT: 900  # Hard timeout in seconds for a background task
 SLEEP_TIME: 1  # The sleep time between each step to wait for the window to be ready
 RECTANGLE_TIME: 1
 

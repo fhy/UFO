@@ -724,6 +724,34 @@ def create_mobile_action_server(
         port=port,
     )
 
+    async def ensure_device_unlocked() -> None:
+        """Wake and unlock the no-password test device before an action."""
+        proc = await asyncio.create_subprocess_exec(
+            adb_path, "shell", "dumpsys", "window",
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await proc.communicate()
+        state = stdout.decode("utf-8", errors="replace")
+        if not any(
+            marker in state
+            for marker in (
+                "mDreamingLockscreen=true",
+                "mShowingLockscreen=true",
+                "isStatusBarKeyguard=true",
+            )
+        ):
+            return
+        wake = await asyncio.create_subprocess_exec(
+            adb_path, "shell", "input", "keyevent", "KEYCODE_WAKEUP",
+            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE,
+        )
+        await wake.communicate()
+        unlock = await asyncio.create_subprocess_exec(
+            adb_path, "shell", "input", "swipe", "360", "1300", "360", "500", "300",
+            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE,
+        )
+        await unlock.communicate()
+
     # ========================================
     # Action Tool 1: Tap/Click
     # ========================================
@@ -743,6 +771,7 @@ def create_mobile_action_server(
         Automatically invalidates controls cache after interaction.
         """
         try:
+            await ensure_device_unlocked()
             proc = await asyncio.create_subprocess_exec(
                 adb_path,
                 "shell",
@@ -792,6 +821,7 @@ def create_mobile_action_server(
         Automatically invalidates controls cache after interaction.
         """
         try:
+            await ensure_device_unlocked()
             proc = await asyncio.create_subprocess_exec(
                 adb_path,
                 "shell",
@@ -1134,6 +1164,7 @@ def create_mobile_action_server(
         Useful for navigation (back, home) and system actions.
         """
         try:
+            await ensure_device_unlocked()
             proc = await asyncio.create_subprocess_exec(
                 adb_path,
                 "shell",
@@ -1183,6 +1214,7 @@ def create_mobile_action_server(
         then use the id and name to click the desired control.
         """
         try:
+            await ensure_device_unlocked()
             # Try to get control from cache
             target_control = mobile_state.get_control_by_id(control_id)
 

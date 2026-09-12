@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import logging
 from typing import TYPE_CHECKING, Optional
+from urllib.parse import parse_qs, urlparse, urlunparse
 from uuid import uuid4
 
 import websockets
@@ -54,6 +55,15 @@ class UFOWebSocketClient:
         self.session_id: Optional[str] = None
         self._ws: Optional[WebSocketClientProtocol] = None
 
+        # Extract token from ws_url query params (e.g. ws://host:port/ws?token=xxx)
+        parsed = urlparse(ws_url)
+        query = parse_qs(parsed.query)
+        self.ws_token = query.get("token", [None])[0]
+        if self.ws_token is not None:
+            query.pop("token", None)
+            self.ws_url = urlunparse(
+                (parsed.scheme, parsed.netloc, parsed.path, "", "", parsed.fragment)
+            )
         self.connected_event = asyncio.Event()
 
         # AIP protocol instances (will be initialized on connection)
@@ -90,6 +100,9 @@ class UFOWebSocketClient:
 
                 async with websockets.connect(
                     self.ws_url,
+                    extra_headers={"Authorization": f"Bearer {self.ws_token}"}
+                    if self.ws_token
+                    else None,
                     ping_interval=20,  # Reduced to 20s for more frequent keepalive
                     ping_timeout=180,  # Increased to 180s (3 minutes) to handle long-running operations
                     close_timeout=10,
@@ -287,7 +300,9 @@ class UFOWebSocketClient:
             self.logger.info(f"[WS] Received message: {data}")
 
             if msg_type == ServerMessageType.TASK:
-                await self.start_task(data.user_request, data.task_name)
+                await self.start_task(
+                    data.user_request, data.task_name, data.session_id
+                )
             elif msg_type == ServerMessageType.HEARTBEAT:
                 self.logger.info("[WS] Heartbeat received")
             elif msg_type == ServerMessageType.TASK_END:
@@ -302,7 +317,9 @@ class UFOWebSocketClient:
         except Exception as e:
             self.logger.error(f"[WS] Error handling message: {e}", exc_info=True)
 
-    async def start_task(self, request_text: str, task_name: str | None):
+    async def start_task(
+        self, request_text: str, task_name: str | None, session_id: str | None = None
+    ):
         """
         Start a new task based on the received data.
         :param data: The data received from the server.
@@ -321,6 +338,10 @@ class UFOWebSocketClient:
             try:
                 async with self.ufo_client.task_lock:
                     self.ufo_client.reset()
+                    # Preserve the server-assigned ID. The HTTP dispatch
+                    # response and the later task result lookup both use it.
+                    if session_id:
+                        self.ufo_client.session_id = session_id
 
                     # Build metadata with platform information
                     metadata = {}

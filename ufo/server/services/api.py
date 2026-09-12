@@ -114,10 +114,18 @@ def create_api_router(
 
     @router.get("/api/task_result/{task_name}", dependencies=[Depends(auth)])
     async def get_task_result(task_name: str):
-        result = session_manager.get_result_by_task(task_name)
-        if not result:
+        task_status = session_manager.get_task_status(task_name)
+        if task_status == "running":
             return {"status": "pending"}
-        return {"status": "done", "result": result}
+        result = session_manager.get_result_by_task(task_name)
+        # An empty result can be a legitimate completed/failed session
+        # result. Only an absent mapping means the task is still pending.
+        if result is None and task_status is None:
+            return {"status": "pending"}
+        return {
+            "status": task_status or "done",
+            "result": result,
+        }
 
     @router.get("/api/health", dependencies=[Depends(auth)])
     async def health_check():

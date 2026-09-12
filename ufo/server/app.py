@@ -61,7 +61,7 @@ else:
 
 # Now import other modules after logging is configured
 import uvicorn
-from fastapi import FastAPI, WebSocket, Query
+from fastapi import FastAPI, WebSocket
 from starlette.status import WS_1008_POLICY_VIOLATION
 
 from ufo.server.services.api import create_api_router
@@ -93,13 +93,17 @@ ws_handler = UFOWebSocketHandler(client_manager, session_manager, cli_args.local
 
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, token: str = Query(default=None)) -> None:
+async def websocket_endpoint(websocket: WebSocket) -> None:
     """
     WebSocket endpoint for handling client connections.
-    Requires a valid API key passed as the 'token' query parameter.
+    Requires a valid API key passed as the 'token' query parameter
+    or 'Authorization: Bearer <key>' header.
     :param websocket: The WebSocket connection.
-    :param token: API key for authentication.
     """
+    token = websocket.query_params.get("token")
+    auth_header = websocket.headers.get("authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        token = token or auth_header[7:]
     if not secrets.compare_digest(token or "", _api_key):
         await websocket.close(code=WS_1008_POLICY_VIOLATION, reason="Invalid or missing token")
         return

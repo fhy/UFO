@@ -607,7 +607,15 @@ class AnnotationDecorator(PhotographerDecorator):
     @staticmethod
     @functools.lru_cache(maxsize=64, typed=False)
     def _get_font(name: str, size: int):
-        return ImageFont.truetype(name, size)
+        # ``arial.ttf`` is not installed on many Linux hosts. Try the
+        # requested font first, then use a common system font so annotation
+        # generation does not disable the annotated screenshot path.
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            return ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size
+            )
 
     @staticmethod
     def number_to_letter(n: int):

@@ -272,6 +272,7 @@ class SystemConfig:
     # ========== Execution Limits ==========
     max_step: int = 50
     max_round: int = 1
+    task_timeout: int = 900
     sleep_time: int = 1
     rectangle_time: int = 1
 
@@ -484,6 +485,7 @@ class SystemConfig:
             # Execution Limits
             "MAX_STEP": "max_step",
             "MAX_ROUND": "max_round",
+            "TASK_TIMEOUT": "task_timeout",
             "SLEEP_TIME": "sleep_time",
             "RECTANGLE_TIME": "rectangle_time",
             # Action Configuration
