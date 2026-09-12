@@ -181,12 +181,16 @@ scan. If `客户评论` is reached without the target above it, finish this
 product and move to the next one.
 
 Important page-order rule: on the relevant product detail layout,
-`达人视频精选` appears above `客户评论` or `客户对店铺的评价`. If either
-review section becomes visible before the target is found, stop searching this
-product immediately. Do not scroll below reviews or click review cards/videos.
-Only record the product as absent when the target was not visible above the
-review boundary. A generic `视频` section below reviews is not evidence of
-`达人视频精选`.
+`达人视频精选` normally appears above `客户评论` or `客户对店铺的评价`.
+If a review section appears before the target is found, first capture and
+analyze that frame, then scroll the customer-review section to its bottom one
+swipe at a time. After every swipe, capture and analyze a new screenshot.
+Only record the product as absent after the review section has reached its
+bottom and the target was not found in the preceding frames. A generic
+`视频` section below reviews is not evidence of `达人视频精选`.
+
+Never issue multiple review swipes without an intervening screenshot analysis.
+Do not click review cards or review videos while checking the review boundary.
 
 For product traversal, treat the review boundary as the per-product stop
 condition: no target above reviews means record `has_creator_video=false`,
