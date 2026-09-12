@@ -116,6 +116,17 @@ Handling rules:
 5. Never perform more than two close/back attempts for the same overlay.
 6. If the page does not change after two attempts, mark the task unresolved and stop.
 
+If an unexpected but recoverable page appears during a planned traversal,
+return to the last known safe state instead of aborting the whole traversal:
+
+- unexpected video/detail/overlay while in product detail: press BACK once and
+  verify the same product detail page;
+- unexpected page while in a creator profile: press BACK once and verify the
+  same featured-video page;
+- unexpected popup: close it once, recollect, and continue;
+- if the safe state is not restored after one recovery, terminate only the
+  current item and return the partial report, rather than issuing more guesses.
+
 For a TikTok permission dialog requesting contacts, Facebook friends, email, or similar nonessential access, click the current fresh `不允许` control immediately. Do not choose `好的` or grant access. Wait for the dialog to disappear, then recollect the screenshot and controls before continuing.
 
 Promotional Shop overlays can remain visible even after a tap or BACK appears to succeed. Treat the overlay as unresolved until a fresh screenshot shows the underlying page. If it remains after two close attempts, force-stop/relaunch TikTok only when the current task has no useful in-progress detail page; otherwise stop and preserve the current page.
@@ -153,6 +164,13 @@ For each product:
 10. Stop immediately when the heading and first thumbnail are fully visible. Successful runs found `达人视频精选 (13)` after one upward swipe, `达人视频精选 (30+)` after the section was fully exposed, and `达人视频精选 (2)` after two swipes.
 11. If the page reaches the bottom, does not change, or reaches six detail scrolls without the target, record `has_creator_video=false` and return once to the product list.
 12. Never switch detail tabs or click unrelated recommended products while searching.
+
+Do not use the `描述`, `评论`, or `推荐` tabs to search for the target. The
+verified section is discovered from the product information/overview page by
+vertical scrolling. If a tab changes to `视频`, `描述`, or review content,
+return once to the product information page and resume the bounded vertical
+scan. If `客户评论` is reached without the target above it, finish this
+product and move to the next one.
 
 Important page-order rule: on the relevant product detail layout,
 `达人视频精选` appears above `客户评论` or `客户对店铺的评价`. If either
@@ -209,6 +227,28 @@ When `达人视频精选` is found:
 7. On the creator profile, read visible nickname, account, followers, following, likes, bio, and other public information.
 8. Do not follow, like, comment, share, or open unrelated links.
 9. Finish immediately after the public creator information is captured.
+
+## Enumerating Featured Videos
+
+For a product whose section count is known, enumerate videos from the first
+featured video page instead of repeatedly reopening thumbnails from the
+product detail page:
+
+1. Open the first featured video and record its creator.
+2. After returning to the video page, swipe upward once to move to the next
+   video in the same featured-video feed.
+3. Wait for the next video to load and recollect controls.
+4. Extract the creator entry ending in `主页`, open the creator profile, record
+   the public data, and return to the video page.
+5. Repeat until the expected section count is exhausted, the feed loops to an
+   already-seen video/creator, or the page state becomes inconsistent.
+6. Deduplicate by handle first, then creator ID, then normalized nickname,
+   while retaining one record per video index.
+
+Do not swipe the product detail page to switch featured videos once the first
+featured video is open. Use upward swipes on the video feed itself. If a
+creator/profile return fails, recover once and continue with the next video;
+stop only when the safe video feed cannot be restored.
 
 If no explicit creator avatar or handle is visible, report that creator profile navigation is unavailable. Do not infer a creator name from product text, watermark text, or the shop name.
 
