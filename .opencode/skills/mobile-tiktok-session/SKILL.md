@@ -89,7 +89,7 @@ After tapping the shop icon, verify the destination before selecting a product:
 - After the first detail-page upward swipe, if `达人视频精选` is visible but the first thumbnail is partly hidden behind the purchase bar, swipe upward once more. Do not click the purchase bar. Verified counts include `(13)`, `(30+)`, `(2)`, and `(1)`.
 - A successful tap only means ADB injected input. Verify Activity and screenshot after 2-5 seconds.
 - When the featured section is fully visible, stop scrolling, click the first featured video, then use the creator control whose accessibility description ends with `主页`, not `关注` or engagement controls.
-- If the page remains wrong after two recovery attempts, stop and report `unknown`; do not continue old coordinates.
+- If an unexpected page appears, recover through TikTok home/profile and the account Shop path instead of abandoning the overall task. Stop only when home/profile recovery fails twice, the device is unavailable, or the watchdog expires.
 - Keep one Server, one Client (`mobile_phone_1`), and one MCP process to avoid command interleaving and stale-cache contamination.
 
 ## Overlay and Wrong-Page Handling
@@ -114,7 +114,15 @@ Handling rules:
 3. If no reliable close control exists, press `KEYCODE_BACK` once.
 4. Recollect screenshot and controls after the action.
 5. Never perform more than two close/back attempts for the same overlay.
-6. If the page does not change after two attempts, mark the task unresolved and stop.
+6. If the page does not change after two attempts, mark the current item unresolved and recover through TikTok home/profile; do not continue old coordinates.
+
+For unexpected pages during traversal: record Activity, visible markers, last
+action, screenshot, and the ledger; press `KEYCODE_HOME` once; wake/unlock and
+launch TikTok `MainActivity`; enter the live bottom `主页`; use the live shop
+icon after `你的订单`; recollect the Shop list; and resume the first
+unprocessed product/video. Permission dialogs use `不允许`; promotions use a
+fresh close control. If recovery fails twice or remains ambiguous for 60
+seconds, return a partial report and stop reason.
 
 If an unexpected but recoverable page appears during a planned traversal,
 return to the last known safe state instead of aborting the whole traversal:
