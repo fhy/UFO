@@ -158,6 +158,14 @@ An accidental product-card click may open the add-to-cart page/drawer. In this T
 
 ## Finding the Featured Section
 
+Every detail-page swipe is an atomic observe-act cycle. Never batch two or
+more `swipe` commands in one shell command, Agent response, or recovery
+sequence. After exactly one swipe: wait for the page, capture a screenshot,
+analyze it, and only then decide whether another swipe is allowed. If the
+next frame shows `客户评论`, `客户对店铺的评价`, or another lower section,
+the previous frame must be treated as the last evidence frame; do not swipe
+again before reviewing it.
+
 For each product:
 
 1. Record product name, price, visible position, previous item, and next item.
