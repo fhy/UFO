@@ -114,7 +114,7 @@ Handling rules:
 3. If no reliable close control exists, press `KEYCODE_BACK` once.
 4. Recollect screenshot and controls after the action.
 5. Never perform more than two close/back attempts for the same overlay.
-6. If the page does not change after two attempts, mark the current item unresolved and recover through TikTok home/profile; do not continue old coordinates.
+6. If the page does not change after two attempts, terminate the current app task and restart TikTok before retrying through home/profile; do not continue old coordinates.
 
 For unexpected pages during traversal: record Activity, visible markers, last
 action, screenshot, and the ledger; press `KEYCODE_HOME` once; wake/unlock and
@@ -382,10 +382,20 @@ launcher when a Shop page is expected.
 Recovery is deliberately limited: stop Agent actions, try one fresh `关闭`,
 `取消`, or `KEYCODE_BACK` only when the destination is clear, then recollect
 Activity, screenshot, and controls. If the same wrong page remains, terminate
-the task and return `failed`/`unknown` with the recorded event. If no useful
-detail state must be preserved, force-stop and relaunch TikTok before the next
-task. Never allow an old task to continue after recovery or wait for the full
-timeout when the same error page/action repeats twice.
+the current app task and restart TikTok before retrying. Never allow an old
+task to continue after recovery or wait for the full timeout when the same
+error page/action repeats twice.
+
+Restart sequence:
+
+```bash
+adb shell am force-stop com.ss.android.ugc.trill
+adb shell am start -n com.ss.android.ugc.trill/com.ss.android.ugc.aweme.main.MainActivity
+```
+
+Wait for `MainActivity`, click `不允许` on permission dialogs, then enter
+`主页` and the shop icon after `你的订单`. Record the error page and restart
+event in the process report.
 
 Return `unknown` rather than claiming a product lacks `达人视频精选` when the page could not be inspected reliably.
 
